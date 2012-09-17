@@ -1,5 +1,6 @@
 require 'multi_json'
 require 'time'
+require 'celluloid'
 
 module Sprockets
   # The Manifest logs the contents of assets compiled to a single
@@ -23,6 +24,7 @@ module Sprockets
     #   Manifest.new(environment, "./public/assets/manifest.json")
     #
     def initialize(environment, path)
+      Celluloid.logger = nil
       @environment = environment
 
       if File.extname(path) == ""
@@ -86,28 +88,32 @@ module Sprockets
       paths = environment.each_logical_path(*args).to_a +
         args.flatten.select { |fn| Pathname.new(fn).absolute? if fn.is_a?(String)}
 
+      futures = []
       paths.each do |path|
-        if asset = find_asset(path)
-          files[asset.digest_path] = {
-            'logical_path' => asset.logical_path,
-            'mtime'        => asset.mtime.iso8601,
-            'size'         => asset.bytesize,
-            'digest'       => asset.digest
-          }
-          assets[asset.logical_path] = asset.digest_path
+        futures << Celluloid::Future.new do
+          if asset = find_asset(path)
+            files[asset.digest_path] = {
+              'logical_path' => asset.logical_path,
+              'mtime'        => asset.mtime.iso8601,
+              'size'         => asset.bytesize,
+              'digest'       => asset.digest
+            }
+            assets[asset.logical_path] = asset.digest_path
 
-          target = File.join(dir, asset.digest_path)
+            target = File.join(dir, asset.digest_path)
 
-          if File.exist?(target)
-            logger.debug "Skipping #{target}, already exists"
-          else
-            logger.info "Writing #{target}"
-            asset.write_to target
+            if File.exist?(target)
+              logger.debug "Skipping #{target}, already exists"
+            else
+              logger.info "Writing #{target}"
+              asset.write_to target
+            end
+
+            save
+            asset
           end
-
-          save
-          asset
         end
+        futures.map(&:value)
       end
     end
 

@@ -1,4 +1,5 @@
 require 'sprockets/version'
+require 'erb'
 
 module Sprockets
   # Environment

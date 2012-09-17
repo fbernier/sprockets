@@ -14,6 +14,7 @@ Gem::Specification.new do |s|
   s.add_dependency "multi_json", "~> 1.0"
   s.add_dependency "rack", "~> 1.0"
   s.add_dependency "tilt", ["~> 1.1", "!= 1.3.0"]
+  s.add_dependency "celluloid"
 
   s.add_development_dependency "coffee-script", "~> 2.0"
   s.add_development_dependency "coffee-script-source", "~> 1.2.0"

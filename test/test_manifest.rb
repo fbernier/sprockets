@@ -77,7 +77,9 @@ class TestManifest < Sprockets::TestCase
     assert !File.exist?("#{@dir}/#{app_digest_path}")
     assert !File.exist?("#{@dir}/#{gallery_digest_path}")
 
-    @manifest.compile('application.js', 'gallery.css')
+    1000.times do
+      @manifest.compile('application.js', 'gallery.css', 'compat.js', 'constants.js', 'charset.css', 'mismatch.js', 'multiple.js')
+    end
 
     assert File.exist?("#{@dir}/manifest.json")
     assert File.exist?("#{@dir}/#{app_digest_path}")
